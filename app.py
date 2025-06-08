@@ -4,23 +4,17 @@ import streamlit as st
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 
+# Background image as CSS only
 st.markdown(
     """
     <style>
-        .fullscreen-img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            z-index: -1;
-        }
         .stApp {
-            margin-top: 100vh;
+            background-image: url("1.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
     </style>
-    <img class="fullscreen-img" src="1.jpg" />
     """,
     unsafe_allow_html=True
 )
@@ -64,7 +58,7 @@ def ubah_ukuran(folder_input, folder_output, ukuran=(256, 256)):
 
 def manual_otsu(image):
     pixel_number = image.size
-    mean_weight = 1.0/pixel_number
+    mean_weight = 1.0 / pixel_number
     his, bins = np.histogram(image, bins=256, range=(0,256))
     final_thresh, final_var = -1, -1
     total_mean = np.sum(np.arange(256) * his) / pixel_number
@@ -131,42 +125,45 @@ folder_input = st.text_input("Masukkan path folder TB (misal: TB.533):", "TB.533
 folder_output = "hasil_preprocessing"
 
 if st.button("Jalankan Preprocessing"):
-    gray_folder = os.path.join(folder_output, "grayscale")
-    resized_folder = os.path.join(folder_output, "resized")
-    masked_folder = os.path.join(folder_output, "masked")
+    if not os.path.exists(folder_input):
+        st.error(f"Folder tidak ditemukan: {folder_input}")
+    else:
+        gray_folder = os.path.join(folder_output, "grayscale")
+        resized_folder = os.path.join(folder_output, "resized")
+        masked_folder = os.path.join(folder_output, "masked")
 
-    ubah_ke_grayscale(folder_input, gray_folder)
-    ubah_ukuran(gray_folder, resized_folder)
+        ubah_ke_grayscale(folder_input, gray_folder)
+        ubah_ukuran(gray_folder, resized_folder)
 
-    sample_file = next((f for f in os.listdir(resized_folder) if f.endswith('.jpg')), None)
-    if sample_file:
-        img_path = os.path.join(resized_folder, sample_file)
-        img = Image.open(img_path).convert("L")
-        img_np = np.array(img)
+        sample_file = next((f for f in os.listdir(resized_folder) if f.endswith('.jpg')), None)
+        if sample_file:
+            img_path = os.path.join(resized_folder, sample_file)
+            img = Image.open(img_path).convert("L")
+            img_np = np.array(img)
 
-        thresh = manual_otsu(img_np)
-        otsu_mask = (img_np > thresh).astype(np.uint8) * 255
-        mask_dilated = dilate(otsu_mask, 3, 2)
-        mask_closed = erode(mask_dilated, 3, 2)
-        polygon_mask = lung_polygon_mask(img_np)
-        final_mask = np.where(polygon_mask > 0, img_np, 0)
+            thresh = manual_otsu(img_np)
+            otsu_mask = (img_np > thresh).astype(np.uint8) * 255
+            mask_dilated = dilate(otsu_mask, 3, 2)
+            mask_closed = erode(mask_dilated, 3, 2)
+            polygon_mask = lung_polygon_mask(img_np)
+            final_mask = np.where(polygon_mask > 0, img_np, 0)
 
-        st.subheader("Contoh Proses pada 1 Gambar")
-        fig, axs = plt.subplots(1, 5, figsize=(20,4))
-        for ax, data, title in zip(axs,
-                                   [img_np, otsu_mask, mask_dilated, mask_closed, final_mask],
-                                   ["Asli", "Otsu", "Dilasi", "Erosi", "Masked"]):
-            ax.imshow(data, cmap='gray')
-            ax.set_title(title)
-            ax.axis("off")
-        st.pyplot()
+            st.subheader("Contoh Proses pada 1 Gambar")
+            fig, axs = plt.subplots(1, 5, figsize=(20, 4))
+            for ax, data, title in zip(axs,
+                                       [img_np, otsu_mask, mask_dilated, mask_closed, final_mask],
+                                       ["Asli", "Otsu", "Dilasi", "Erosi", "Masked"]):
+                ax.imshow(data, cmap='gray')
+                ax.set_title(title)
+                ax.axis("off")
+            st.pyplot(fig)
 
-        os.makedirs(masked_folder, exist_ok=True)
-        for file in os.listdir(resized_folder):
-            if file.endswith(".jpg"):
-                img = Image.open(os.path.join(resized_folder, file)).convert("L")
-                img_np = np.array(img)
-                masked = np.where(polygon_mask > 0, img_np, 0)
-                Image.fromarray(masked).save(os.path.join(masked_folder, file))
+            os.makedirs(masked_folder, exist_ok=True)
+            for file in os.listdir(resized_folder):
+                if file.endswith(".jpg"):
+                    img = Image.open(os.path.join(resized_folder, file)).convert("L")
+                    img_np = np.array(img)
+                    masked = np.where(polygon_mask > 0, img_np, 0)
+                    Image.fromarray(masked).save(os.path.join(masked_folder, file))
 
-        st.success("Preprocessing selesai. Gambar telah disimpan ke folder.")
+            st.success("Preprocessing selesai. Gambar telah disimpan ke folder.")
