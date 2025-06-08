@@ -6,8 +6,6 @@ import streamlit as st
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 
-st.set_option('deprecation.showPyplotGlobalUse', False)
-
 def list_file_count(folder):
     try:
         files = os.listdir(folder)
