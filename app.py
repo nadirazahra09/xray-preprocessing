@@ -43,7 +43,7 @@ def tampilkan_gambar(folder, judul_koleksi, maks_tampil=6):
     for i, nama_file in enumerate(gambar_ditemukan):
         path = os.path.join(folder, nama_file)
         img = Image.open(path)
-        cols[i].image(img, caption=nama_file, use_column_width=True)
+        cols[i].image(img, caption=nama_file, use_container_width=True)
 
 def ubah_ke_grayscale(folder_input, folder_output):
     os.makedirs(folder_output, exist_ok=True)
