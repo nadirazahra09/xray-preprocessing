@@ -1,12 +1,31 @@
-# file: preprocessing_app.py
-
 import os
 import numpy as np
 import streamlit as st
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 
-st.image("1.jpg", use_column_width=True)
+st.markdown(
+    """
+    <style>
+        .fullscreen-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+        .stApp {
+            margin-top: 100vh;
+        }
+    </style>
+    <img class="fullscreen-img" src="1.jpg" />
+    """,
+    unsafe_allow_html=True
+)
+
+st.title("Preprocessing Gambar Citra X-ray")
 
 def list_file_count(folder):
     try:
@@ -19,7 +38,6 @@ def list_file_count(folder):
 def tampilkan_gambar(folder, judul_koleksi, maks_tampil=6):
     ekstensi_gambar = ['.jpg', '.jpeg', '.png']
     gambar_ditemukan = [f for f in os.listdir(folder) if f.lower().endswith(tuple(ekstensi_gambar))][:maks_tampil]
-
     st.subheader(f"Contoh gambar - {judul_koleksi}")
     cols = st.columns(len(gambar_ditemukan))
     for i, nama_file in enumerate(gambar_ditemukan):
@@ -108,8 +126,6 @@ def lung_polygon_mask(image_gray):
     draw.polygon(left_poly, fill=255)
     draw.polygon(right_poly, fill=255)
     return np.array(mask_img)
-
-st.title("Preprocessing Gambar Citra X-ray")
 
 folder_input = st.text_input("Masukkan path folder TB (misal: TB.533):", "TB.533")
 folder_output = "hasil_preprocessing"
