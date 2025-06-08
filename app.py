@@ -6,6 +6,8 @@ import streamlit as st
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 
+st.image("1.jpg", use_column_width=True)
+
 def list_file_count(folder):
     try:
         files = os.listdir(folder)
